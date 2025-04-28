@@ -12,6 +12,7 @@ object TaskRepository {
         return tasks
     }
     fun add(newTask: Task) {
+        assert(! tasks.map { it.id }.contains(newTask.id)) { "A task with given id already exists" }
         tasks.add(newTask)
     }
 }
