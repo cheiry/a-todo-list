@@ -12,6 +12,8 @@ import io.ktor.server.routing.*
 fun Application.configureRouting() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+            if (cause is AssertionError)
+                call.respondText(text = "403: ${cause.message}", status = HttpStatusCode.BadRequest)
             call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
         }
     }
