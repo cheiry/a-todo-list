@@ -11,6 +11,9 @@ object TaskRepository {
     fun list(): List<Task> {
         return tasks
     }
+    fun add(newTask: Task) {
+        tasks.add(newTask)
+    }
 }
 
 @Serializable
