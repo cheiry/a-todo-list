@@ -18,4 +18,8 @@ object TaskRepository {
 }
 
 @Serializable
-class Task (val id: Int, val name: String)
+class Task (val id: Int, val name: String, val status: Status? = Status.NEW)
+
+enum class Status {
+    NEW, TODO, DOING, BLOCKED, DONE
+}
