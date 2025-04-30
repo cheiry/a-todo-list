@@ -62,7 +62,7 @@ class ApplicationTest {
             contentType(ContentType.Application.Json)
             setBody(Task(6, "Test"))
         }
-        client.put("/tasks/6/status/TODO") {
+        client.put("/tasks/6?status=TODO") {
             contentType(ContentType.Application.Json)
         } .apply { assertEquals(HttpStatusCode.NoContent, status) } // TODO : maybe change the return code ?
         val tasks: Array<Task> = client.get("/tasks").body()
