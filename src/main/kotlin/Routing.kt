@@ -29,5 +29,11 @@ fun Application.configureRouting() {
             TaskRepository.add(newTask)
             call.respond(HttpStatusCode.Created)
         }
+        put("/tasks/{id}") {
+            val taskId: Int = call.request.pathVariables["id"]?.toInt() ?:return@put call.respond(HttpStatusCode.NotFound)
+            val status: Status = call.request.queryParameters["status"]?.let { Status.valueOf(it) } ?:return@put call.respond(HttpStatusCode.BadRequest)
+            TaskRepository.getById(taskId).status = status
+            call.respond(HttpStatusCode.NoContent)
+        }
     }
 }
