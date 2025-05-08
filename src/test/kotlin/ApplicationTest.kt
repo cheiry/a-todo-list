@@ -16,12 +16,26 @@ class ApplicationTest {
     fun `get tasks returns ok`() = testApplication {
         val client = setup()
         val response = client.get("/tasks")
-        response.apply {
-            assertEquals(HttpStatusCode.OK, status)
-        }
         val tasks: Array<Task> = response.body()
-        assertEquals("Get a life", tasks[0].name)
-        assertEquals(Status.NEW, tasks[0].status)
+        assertEquals(HttpStatusCode.OK, response.status)
+    }
+
+    @Test
+    fun `get a task returns ok`() = testApplication {
+        val client = setup()
+        val response = client.get("/tasks/1")
+        val task: Task = response.body()
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(1, task.id)
+        assertEquals("Get a life", task.name)
+        assertEquals(Status.NEW, task.status)
+    }
+
+    @Test
+    fun `get non existing task return error`() = testApplication {
+        val client = setup()
+        val response = client.get("/tasks/10")
+        response.apply { assertEquals(HttpStatusCode.NotFound, response.status) }
     }
 
     @Test
@@ -31,8 +45,10 @@ class ApplicationTest {
             contentType(ContentType.Application.Json)
             setBody(Task(4, "Test"))
         }.apply { assertEquals(HttpStatusCode.Created, status) }
-        val tasks: Array<Task> = client.get("/tasks").body()
-        assertEquals("Test", tasks[3].name)
+        val task: Task = client.get("/tasks/4").body()
+        assertEquals(4, task.id)
+        assertEquals("Test", task.name)
+        assertEquals(Status.NEW, task.status)
     }
 
     @Test
@@ -51,8 +67,8 @@ class ApplicationTest {
             contentType(ContentType.Application.Json)
             setBody(Task(5, "Test", Status.TODO))
         } .apply { assertEquals(HttpStatusCode.Created, status) }
-        val tasks: Array<Task> = client.get("/tasks").body()
-        assertEquals(Status.TODO, tasks.last().status)
+        val task: Task = client.get("/tasks/5").body()
+        assertEquals(Status.TODO, task.status)
     }
 
     @Test
@@ -65,8 +81,8 @@ class ApplicationTest {
         client.put("/tasks/6?status=TODO") {
             contentType(ContentType.Application.Json)
         } .apply { assertEquals(HttpStatusCode.NoContent, status) } // TODO : maybe change the return code ?
-        val tasks: Array<Task> = client.get("/tasks").body()
-        assertEquals(Status.TODO, tasks.last().status)
+        val task: Task = client.get("/tasks/6").body()
+        assertEquals(Status.TODO, task.status)
     }
 
     @Test
@@ -79,10 +95,15 @@ class ApplicationTest {
         client.delete("/tasks/10") {
             contentType(ContentType.Application.Json)
         }.apply { assertEquals(HttpStatusCode.OK, status) }
+        client.get { "/tasks/10" }.apply {
+            assertEquals(HttpStatusCode.NotFound, status)
+        }
     }
 
     private fun ApplicationTestBuilder.setup(): HttpClient {
-        application { module() }
+        application {
+            configureRouting()
+        }
         val client = createClient {
             install(ContentNegotiation) {
                 json()
