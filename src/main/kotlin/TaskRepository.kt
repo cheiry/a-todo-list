@@ -19,6 +19,10 @@ object TaskRepository {
         assert(tasks.map { it.id }.contains(taskId)) { "A task with given id does not exist" }
         return tasks.filter { it.id == taskId }.first()
     }
+    fun delete(id: Int) {
+        assert(tasks.map { it.id }.contains(id)) { "A task with given id does not exist" }
+        tasks.removeIf { it.id == id }
+    }
 }
 
 @Serializable

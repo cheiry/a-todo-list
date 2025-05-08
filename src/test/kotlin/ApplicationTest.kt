@@ -69,6 +69,18 @@ class ApplicationTest {
         assertEquals(Status.TODO, tasks.last().status)
     }
 
+    @Test
+    fun `delete a task with id`() = testApplication {
+        val client = setup()
+        client.post("/tasks") {
+            contentType(ContentType.Application.Json)
+            setBody(Task(10, "Test", Status.TODO))
+        }
+        client.delete("/tasks/10") {
+            contentType(ContentType.Application.Json)
+        }.apply { assertEquals(HttpStatusCode.OK, status) }
+    }
+
     private fun ApplicationTestBuilder.setup(): HttpClient {
         application { module() }
         val client = createClient {
