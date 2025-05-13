@@ -1,8 +1,9 @@
-package com.cheiry
+package com.cheiry.fr.cheiry
 
-import kotlinx.serialization.Serializable
+import org.springframework.stereotype.Component
 
-object TaskRepository {
+@Component
+class TaskRepository {
     private val tasks: MutableList<Task> = mutableListOf(
         Task(1, "Get a life"),
         Task(2, "Add a post"),
@@ -39,7 +40,6 @@ object TaskRepository {
     }
 }
 
-@Serializable
 class Task (val id: Int, val name: String, var status: Status? = Status.NEW)
 
 enum class Status {
