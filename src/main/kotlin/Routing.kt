@@ -12,7 +12,9 @@ import io.ktor.server.routing.*
 fun Application.configureRouting() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            if (cause is AssertionError)
+            if (cause is TaskNotFoundException)
+                call.respondText(text = "404: ${cause.message}", status = HttpStatusCode.NotFound)
+            if (cause is IllegalStateException || cause is TaskAlreadyExistsException)
                 call.respondText(text = "403: ${cause.message}", status = HttpStatusCode.BadRequest)
             call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
         }
@@ -23,6 +25,11 @@ fun Application.configureRouting() {
     routing {
         get("/tasks") {
             call.respond(TaskRepository.list())
+        }
+        get("/tasks/{id}") {
+            val id = call.parameters["id"]?.toInt() ?:return@get call.respond(HttpStatusCode.NotFound)
+            val task = TaskRepository.getById(id)
+            call.respond(task)
         }
         post("/tasks") {
             val newTask = call.receive<Task>()
