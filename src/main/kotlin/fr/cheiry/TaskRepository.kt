@@ -1,4 +1,4 @@
-package com.cheiry.fr.cheiry
+package fr.cheiry
 
 import org.springframework.stereotype.Component
 

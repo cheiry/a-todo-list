@@ -1,4 +1,4 @@
-package com.cheiry.fr.cheiry
+package fr.cheiry
 
 import org.apache.coyote.BadRequestException
 import org.springframework.stereotype.Component
@@ -22,7 +22,7 @@ class Route ( val handler: TaskHandler ) {
 }
 
 @Component
-class TaskHandler ( val repository : TaskRepository ) {
+class TaskHandler ( val repository : TaskRepository) {
 
     fun getAllTasks(request: ServerRequest): ServerResponse {
         return ServerResponse.ok().body(repository.list())
@@ -35,8 +35,14 @@ class TaskHandler ( val repository : TaskRepository ) {
     }
 
     fun getATask(request: ServerRequest): ServerResponse {
-        val id = request.pathVariable("id").toInt()
-        return ServerResponse.ok().body(repository.getById(id))
+        return try {
+            val id = request.pathVariable("id").toInt()
+            ServerResponse.ok().body(repository.getById(id))
+        } catch (e: TaskNotFoundException) {
+            ServerResponse.notFound().build()
+        } catch (e: NumberFormatException) {
+            ServerResponse.badRequest().build()
+        }
     }
 
     fun deleteTask(request: ServerRequest): ServerResponse {
