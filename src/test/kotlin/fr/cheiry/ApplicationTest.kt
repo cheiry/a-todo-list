@@ -6,11 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.delete
-import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.*
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -80,7 +76,7 @@ class ApplicationTest {
     }
 
     @Test
-    fun `delete existing task deletes` (@Autowired mvc: MockMvc) {
+    fun `delete existing task deletes`(@Autowired mvc: MockMvc) {
         mvc.post("/tasks") {
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(Task(10, "Test"))
@@ -91,12 +87,50 @@ class ApplicationTest {
     }
 
     @Test
-    fun `delete non existing task returns error` (@Autowired mvc: MockMvc) {
+    fun `delete non existing task returns error`(@Autowired mvc: MockMvc) {
         mvc.delete("/tasks/45").andExpect { status { isNotFound() } }
     }
 
     @Test
-    fun `delete bad task returns error` (@Autowired mvc: MockMvc) {
+    fun `delete bad task returns error`(@Autowired mvc: MockMvc) {
         mvc.delete("/tasks/abc").andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `change status`(@Autowired mvc: MockMvc) {
+        mvc.post("/tasks") {
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(Task(11, "Test"))
+        }
+        mvc.put("/tasks/11") { param("status", "TODO") }
+            .andExpect { status { isNoContent() } }
+        mvc.get("/tasks/11").andExpect {
+            content { jsonPath("$.status") { value("TODO") }
+            }
+        }
+        mvc.delete("/tasks/11")
+    }
+
+    @Test
+    fun `change bad status returns error`(@Autowired mvc: MockMvc) {
+        mvc.post("/tasks") {
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(Task(11, "Test"))
+        }
+        mvc.put("/tasks/11") { param("status", "ND") }
+            .andExpect { status { isBadRequest() } }
+        mvc.delete("/tasks/11")
+    }
+
+    @Test
+    fun `change non existing task returns error`(@Autowired mvc: MockMvc) {
+        mvc.put("/tasks/11") { param("status", "TODO") }
+            .andExpect { status { isNotFound() } }
+    }
+
+    @Test
+    fun `change bad task returns error`(@Autowired mvc: MockMvc) {
+        mvc.put("/tasks/abc") { param("status", "TODO") }
+            .andExpect { status { isBadRequest() } }
     }
 }

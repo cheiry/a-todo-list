@@ -62,10 +62,16 @@ class TaskHandler ( val repository : TaskRepository) {
     }
 
     fun changeStatus(request: ServerRequest): ServerResponse {
-        val id = request.pathVariable("id").toInt()
-        request.param("status")
-            .ifPresentOrElse( { Status.valueOf(it.uppercase()).let { status -> repository.getById(id).status = status } }
-                , { throw BadRequestException("Wrong status") } )
-        return ServerResponse.noContent().build()
+        return try {
+            val id = request.pathVariable("id").toInt()
+            val status: Status = request.param("status").map { Status.valueOf(it.uppercase()) }
+                .orElseThrow { BadRequestException("Wrong status") }
+            repository.getById(id).status = status
+            ServerResponse.noContent().build()
+        } catch (e: TaskNotFoundException) {
+            ServerResponse.notFound().build()
+        } catch (e : IllegalArgumentException ) {
+            ServerResponse.badRequest().build()
+        }
     }
 }
