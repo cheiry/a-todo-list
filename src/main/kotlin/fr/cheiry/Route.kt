@@ -29,9 +29,13 @@ class TaskHandler ( val repository : TaskRepository) {
     }
 
     fun createTask(request: ServerRequest): ServerResponse {
-        val body = request.body<Task>()
-        repository.add(body)
-        return ServerResponse.created(create("/tasks/${body.id}")).build()
+        return try {
+            val body = request.body<Task>()
+            repository.add(body)
+            ServerResponse.created(create("/tasks/${body.id}")).build()
+        } catch (e: TaskAlreadyExistsException) {
+            ServerResponse.badRequest().build()
+        }
     }
 
     fun getATask(request: ServerRequest): ServerResponse {
@@ -46,9 +50,15 @@ class TaskHandler ( val repository : TaskRepository) {
     }
 
     fun deleteTask(request: ServerRequest): ServerResponse {
-        val id = request.pathVariable("id").toInt()
-        repository.delete(id)
-        return ServerResponse.noContent().build()
+        return try {
+            val id = request.pathVariable("id").toInt()
+            repository.delete(id)
+            ServerResponse.noContent().build()
+        } catch (e: TaskNotFoundException) {
+            ServerResponse.notFound().build()
+        } catch (e: NumberFormatException) {
+            ServerResponse.badRequest().build()
+        }
     }
 
     fun changeStatus(request: ServerRequest): ServerResponse {
